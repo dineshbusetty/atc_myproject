@@ -88,7 +88,7 @@ app.logger.addHandler(file_handler)
 # print(table)
 ###############
 ############################Droping all tables and creating new table$$$$$$$$$$$$$$$$ Starting point
-##ctrl+1 for commenting and uncommenting
+#ctrl+1 for commenting and uncommenting
 # conn = sqlite3.connect(project_path + '/static/database/atc_main_table.db')
 # cursor = conn.cursor()
 # cursor.execute("DROP TABLE IF EXISTS PlywoodCountTable")
@@ -109,7 +109,7 @@ app.logger.addHandler(file_handler)
 # conn.commit()
 # conn.close()
 #
-# #Doping EMPLOYEE table if already exists.
+# #Droping EMPLOYEE table if already exists.
 # conn = sqlite3.connect(project_path + '/static/database/atc_main_table.db')
 # cursor = conn.cursor()
 # cursor.execute("DROP TABLE IF EXISTS PlywoodCreditTable")
@@ -122,7 +122,7 @@ app.logger.addHandler(file_handler)
 #     credit_id INTEGER PRIMARY KEY AUTOINCREMENT,
 #     name CHAR(50) NOT NULL,
 #     mobileno CHAR(20) NOT NULL,
-#     total_credit INT(20) NOT NULL
+#     total_credit FLOAT(20) NOT NULL
 # )'''
 # cursor.execute(sql)
 # conn.commit()
@@ -142,10 +142,10 @@ app.logger.addHandler(file_handler)
 #     mobileno CHAR(10) NOT NULL,
 #     order_date CHAR(50) NOT NULL,
 #     order_items INT(20) NOT NULL,
-#     total_amount INT(20) NOT NULL,
-#     after_discount_amount INT(20) NOT NULL,
-#     paid_amount INT(20) NOT NULL,
-#     running_total INT(20) NOT NULL,
+#     total_amount FLOAT(20) NOT NULL,
+#     after_discount_amount FLOAT(20) NOT NULL,
+#     paid_amount FLOAT(20) NOT NULL,
+#     running_total FLOAT(20) NOT NULL,
 #     notes CHAR(50) NOT NULL
 # )'''
 # cursor.execute(sql)
@@ -166,7 +166,7 @@ app.logger.addHandler(file_handler)
 #     size CHAR(50) NOT NULL,
 #     thickness CHAR(50) NOT NULL,
 #     count INT(20) NOT NULL,
-#     amount INT(20) NOT NULL
+#     amount FLOAT(20) NOT NULL
 # )'''
 # cursor.execute(sql)
 # conn.commit()
@@ -206,7 +206,7 @@ app.logger.addHandler(file_handler)
 #     mobileno CHAR(10) NOT NULL,
 #     order_date CHAR(50) NOT NULL,
 #     passing_date CHAR(50) NOT NULL,
-#     amount INT(20) NOT NULL,
+#     amount FLOAT(20) NOT NULL,
 #     validated CHAR(10) NOT NULL
 # )'''
 # cursor.execute(sql)
@@ -448,7 +448,7 @@ def updateProduct():
     thickness=req_data["data"]["thickness"]
     weight=req_data["data"]["weight"]
     order_date=date.today()
-    order_date = order_date.strftime("%d/%m/%Y")
+    order_date = order_date.strftime("%Y-%m-%d")
     
     product_id=req_data["data"]["product_id"]
     conn = sqlite3.connect(project_path + '/static/database/atc_main_table.db')
@@ -494,7 +494,7 @@ def addProduct():
     width=req_data["data"]["width"]
     weight=req_data["data"]["weight"]
     order_date=date.today()
-    order_date = order_date.strftime("%d/%m/%Y")
+    order_date = order_date.strftime("%Y-%m-%d")
     
     conn = sqlite3.connect(project_path + '/static/database/atc_main_table.db')
     cursor = conn.cursor()
@@ -660,42 +660,11 @@ def createUser():
 
 @app.route("/api/submitOrder", methods=["POST"])#to view all data from
 def submitOrder():
-#     req_data={
-#   "username":"anand",
-#   "amount_details":{
-#     "total_amount": 18500,
-#     "discount_amount": 18000,
-#     "paid_amount": 15000,
-#   },
-#   "user_data":{
-# "paying_as": "",
-#     "mobile_number": "147852369",
-#     "name": "bjl plywoods",
-#     "credit": 40000
-#   },
-#     "order_items": [{
-#       "product_type": "plywood",
-#   "product_name": "Dukes gurjan",
-#       "size": "8x4",
-#   "weight":"",
-#       "thickness": "19mm",
-#       "count": "20",
-#   "amount":"12500"
-#     }, {
-#       "product_type": "Gum",
-#   "product_name": "waterproof",
-#       "size": "",
-#       "thickness": "",
-#   "weight":"100 Kg",
-#       "count": "5",
-#   "amount":"6000"
-#     }]
-# }
     
     req_data = request.get_json()  
     total_amount=req_data["amount_details"]["total_amount"]
-    after_discount_amount=int(req_data["amount_details"]["discount_amount"])
-    paid_amount=int(req_data["amount_details"]["paid_amount"])
+    after_discount_amount=float(req_data["amount_details"]["discount_amount"])
+    paid_amount=float(req_data["amount_details"]["paid_amount"])
     if "notes" not in req_data["amount_details"]:
         notes = ""
     else:
@@ -723,7 +692,7 @@ def submitOrder():
             row2=len(cursor.fetchall())>0
             product_checklist.append(row2)
             print(all(ele == True for ele in product_checklist))
-        if all(ele == True for ele in product_checklist):
+        if all(ele == True for ele in product_checklist) or order_item_products["product_type"][0] == "cash":
             cursor.execute("select * FROM PlywoodCreditTable where name ='{}' ".format(name))
             rows = cursor.fetchall()
             if paying_as=="Cash":
@@ -736,8 +705,8 @@ def submitOrder():
             # con.commit()
             
             order_date=ord_date#date.today()#need to change
-            order_date = datetime.strptime(order_date,"%Y-%m-%d")#order_date.strftime("%d/%m/%Y")
-            order_date=order_date.strftime("%d/%m/%Y")
+            # order_date = datetime.strptime(order_date,"%Y-%m-%d")#order_date.strftime("%d/%m/%Y")
+            # order_date=order_date.strftime("%d/%m/%Y")
             order_items=len(order_item_products)
             cursor.execute('''INSERT INTO OrdersTable(name, mobileno, order_date, order_items,total_amount,after_discount_amount,paid_amount,running_total,notes) VALUES 
                     ('{}','{}','{}','{}','{}','{}','{}','{}','{}')'''.format(name,mobileno,order_date,order_items,total_amount,after_discount_amount,paid_amount,credit,notes))
@@ -755,10 +724,13 @@ def submitOrder():
                         ('{}','{}','{}','{}','{}','{}','{}')'''.format(order_item_products["order_id"][i],order_item_products["product_type"][i],order_item_products["product_name"][i],order_item_products["size"][i],order_item_products["thickness"][i],order_item_products["count"][i],order_item_products["amount"][i]))
                 cursor.execute("select count_num FROM PlywoodCountTable where product_type=='{}' and product_name=='{}' and size=='{}' and thickness=='{}' ".format(order_item_products["product_type"][i],order_item_products["product_name"][i],order_item_products["size"][i],order_item_products["thickness"][i]))
                 row2=cursor.fetchall()
-                old_count=int(row2[0][0])
-                new_count=old_count-int(order_item_products["count"][i])
-                cursor.execute("update PlywoodCountTable set count_num ='{}' where product_type=='{}' and product_name=='{}' and size=='{}' and thickness=='{}' ".format(new_count,order_item_products["product_type"][i],order_item_products["product_name"][i],order_item_products["size"][i],order_item_products["thickness"][i]))
-                con.commit()
+                try:
+                    old_count=(row2[0][0])
+                    new_count=old_count-int(order_item_products["count"][i])
+                    cursor.execute("update PlywoodCountTable set count_num ='{}' where product_type=='{}' and product_name=='{}' and size=='{}' and thickness=='{}' ".format(new_count,order_item_products["product_type"][i],order_item_products["product_name"][i],order_item_products["size"][i],order_item_products["thickness"][i]))
+                except:
+                    pass
+            con.commit()
             con.close()
             return jsonify({"status":"success","message":"succesfully submitted data"})
         else:
@@ -771,8 +743,8 @@ def returnOrder():
     
     req_data = request.get_json()  
     total_amount=req_data["amount_details"]["total_amount"]
-    after_discount_amount=int(req_data["amount_details"]["discount_amount"])
-    paid_amount=int(req_data["amount_details"]["paid_amount"])
+    after_discount_amount=float(req_data["amount_details"]["discount_amount"])
+    paid_amount=float(req_data["amount_details"]["paid_amount"])
     if "notes" not in req_data["amount_details"]:
         notes = ""
     else:
@@ -819,8 +791,8 @@ def returnOrder():
             # con.commit()
             
             order_date=ord_date#date.today()
-            order_date = datetime.strptime(order_date,"%Y-%m-%d")#order_date.strftime("%d/%m/%Y")
-            order_date=order_date.strftime("%d/%m/%Y")
+            # order_date = datetime.strptime(order_date,"%Y-%m-%d")#order_date.strftime("%d/%m/%Y")
+            # order_date=order_date.strftime("%d/%m/%Y")
             order_items=len(order_item_products)
             cursor.execute('''INSERT INTO OrdersTable(name, mobileno, order_date, order_items,total_amount,after_discount_amount,paid_amount,running_total,notes) VALUES 
                     ('{}','{}','{}','{}','{}','{}','{}','{}','{}')'''.format(name,mobileno,order_date,-order_items,-total_amount,-after_discount_amount,-paid_amount,credit,notes))
@@ -877,13 +849,13 @@ def getOrders():
     mobileno=req_data["mobile_number"]
     order_date_from=req_data["order_date_from"]
     order_date_to=req_data["order_date_to"]
-    if order_date_from!="":
-        dto=datetime.strptime(order_date_from, "%Y-%m-%d")
-        order_date_from=dto.strftime("%d/%m/%Y")
-        
-    if order_date_to!="":
-        dto=datetime.strptime(order_date_to, "%Y-%m-%d")
-        order_date_to=dto.strftime("%d/%m/%Y")
+    # if order_date_from!="":
+    #     dto=datetime.strptime(order_date_from, "%Y-%m-%d")
+    #     order_date_from=dto.strftime("%d/%m/%Y")
+    #
+    # if order_date_to!="":
+    #     dto=datetime.strptime(order_date_to, "%Y-%m-%d")
+    #     order_date_to=dto.strftime("%d/%m/%Y")
 
     con = sqlite3.connect(project_path + '/static/database/atc_main_table.db')
     cursor = con.cursor()
@@ -922,7 +894,6 @@ def getOrders():
             return jsonify({"status":"success","data":json.loads(countdf)})
         else:
             return jsonify({"status":"failure","data":"no records found"})
-    
 
 @app.route("/api/getOrderItems", methods=["POST"])#to view all data from
 def getOrderItems():
@@ -937,12 +908,24 @@ def getOrderItems():
         itemsdf=pd.DataFrame(rows)
         itemsdf.columns=["order_id","product_type","product_name","size","thickness","count","amount"]
         itemsdf=itemsdf[["product_type","product_name","size","thickness","count","amount"]]
-        itemsdf = itemsdf.to_json(orient="records")
+
     else:
         itemsdf=pd.DataFrame([["","","","","","",""]])
         itemsdf.columns=["order_id","product_type","product_name","size","thickness","count","amount"]
         itemsdf=itemsdf[["product_type","product_name","size","thickness","count","amount"]]
-        itemsdf = itemsdf.to_json(orient="records")
+
+    price_list= list()
+    for row in range(itemsdf.shape[0]):
+        if itemsdf.loc[row]["product_type"] == "Gum":
+            price_list.append(itemsdf.loc[row]["amount"]/itemsdf.loc[row]["count"])
+        elif itemsdf.loc[row]["product_type"] == "Plywood":
+            eval_size = eval(itemsdf.loc[row]["size"].replace("x", "*"))
+            if eval_size > 50:
+                price_list.append((itemsdf.loc[row]["amount"] / (itemsdf.loc[row]["count"]*eval_size)) * 144)
+            else:
+                price_list.append((itemsdf.loc[row]["amount"] / (itemsdf.loc[row]["count"] * eval_size)))
+    itemsdf["price"] = price_list
+    itemsdf = itemsdf.to_json(orient="records")
     return jsonify({"status":"success","data":json.loads(itemsdf)})
 
 @app.route("/api/getProductNamesList", methods=["POST"])#to view all data from
@@ -1015,8 +998,8 @@ def updateUserCredit():
     cursor.execute('''update PlywoodCreditTable set total_credit =? where name=? and mobileno=?''',(credit,name,mobileno))
     conn.commit()
     order_date = ord_date  # date.today()
-    order_date = datetime.strptime(order_date, "%Y-%m-%d")  # order_date.strftime("%d/%m/%Y")
-    order_date = order_date.strftime("%d/%m/%Y")
+    # order_date = datetime.strptime(order_date, "%Y-%m-%d")  # order_date.strftime("%d/%m/%Y")
+    # order_date = order_date.strftime("%d/%m/%Y")
     order_items=1
     total_amount=0
     after_discount_amount=0
@@ -1053,8 +1036,8 @@ def updateUser():
     #################################
     ord_date = req_data["data"]["order_date"]
     order_date = ord_date  # date.today()
-    order_date = datetime.strptime(order_date, "%Y-%m-%d")  # order_date.strftime("%d/%m/%Y")
-    order_date = order_date.strftime("%d/%m/%Y")
+    # order_date = datetime.strptime(order_date, "%Y-%m-%d")  # order_date.strftime("%d/%m/%Y")
+    # order_date = order_date.strftime("%d/%m/%Y")
     order_items = 1
     total_amount = 0
     after_discount_amount = 0
@@ -1127,9 +1110,9 @@ def getProductsHistory():
     weight=req_data["weight"]
     posted_date=req_data["posted_date"]
     posted_user=req_data["posted_user"]
-    if posted_date!="":
-        dto=datetime.strptime(posted_date, "%Y-%m-%d")
-        posted_date=dto.strftime("%d/%m/%Y")
+    # if posted_date!="":
+    #     dto=datetime.strptime(posted_date, "%Y-%m-%d")
+    #     posted_date=dto.strftime("%d/%m/%Y")
     if product_type=="Gum":
         size=weight
     
@@ -1325,13 +1308,13 @@ def getTransactions():
     mobileno = req_data["mobile_number"]
     order_date_from = req_data["order_date_from"]
     order_date_to = req_data["order_date_to"]
-    if order_date_from != "":
-        dto = datetime.strptime(order_date_from, "%Y-%m-%d")
-        order_date_from = dto.strftime("%d/%m/%Y")
-
-    if order_date_to != "":
-        dto = datetime.strptime(order_date_to, "%Y-%m-%d")
-        order_date_to = dto.strftime("%d/%m/%Y")
+    # if order_date_from != "":
+    #     dto = datetime.strptime(order_date_from, "%Y-%m-%d")
+    #     order_date_from = dto.strftime("%d/%m/%Y")
+    #
+    # if order_date_to != "":
+    #     dto = datetime.strptime(order_date_to, "%Y-%m-%d")
+    #     order_date_to = dto.strftime("%d/%m/%Y")
 
     con = sqlite3.connect(project_path + '/static/database/atc_main_table.db')
     cursor = con.cursor()
@@ -1411,11 +1394,11 @@ def edittransaction():
     new_data = req_data["newData"]
     if old_data["user_data"]["name"] == new_data["user_data"]["name"]:
         order_id = req_data["order_id"]
-        return_url = "http://"+app_host+":8000/api/returnOrder"
+        return_url = "http://"+app_host+"/api/returnOrder" #for deployment remove :8000
         r = requests.post(return_url, json=old_data)
         old_values = r.json()
         new_data["user_data"]["credit"] = old_values["credit"]
-        submit_url = "http://"+app_host+":8000/api/submitOrder"
+        submit_url = "http://"+app_host+"/api/submitOrder" #for deployment remove :8000
         r = requests.post(submit_url, json=new_data)
         con = sqlite3.connect(project_path + "/static/database/atc_main_table.db")
         cursor = con.cursor()
@@ -1476,7 +1459,7 @@ def chequevalidation():
         notes = ""
         order_date = date.today()
         # order_date = datetime.strptime(order_date, "%Y-%m-%d")  # order_date.strftime("%d/%m/%Y")
-        order_date = order_date.strftime("%d/%m/%Y")
+        order_date = order_date.strftime("%Y-%m-%d")
         order_items = 1
         cursor.execute('''INSERT INTO OrdersTable(name, mobileno, order_date, order_items,total_amount,after_discount_amount,paid_amount,running_total,notes) VALUES 
                     ('{}','{}','{}','{}','{}','{}','{}','{}','{}')'''.format(name, mobileno, order_date, order_items,
@@ -1502,5 +1485,5 @@ def chequevalidation():
     return jsonify({"status": "success","data":mode})
 
 if __name__ == "__main__":
-    app_host = "0.0.0.0"
-    app.run(host = app_host,port=8000)  # debug=True,port=8001#0.0.0.0 host=app_host,
+    app_host = "0.0.0.0" # for deployment change here to 0.0.0.0
+    app.run(host = app_host,port=8000)
